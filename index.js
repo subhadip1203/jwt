@@ -52,19 +52,43 @@ let jwt = {
             data_array = encodedata.split("."); 
             payload  = data_array[0]+'.'+data_array[1];
 
-            encoded_by_clientJWT= crypto.createHmac('sha256', secret ).update(payload).digest("base64");
-            encoded_by_clientJWT = remove_eqal_sign(encoded_by_clientJWT)
+            base64_data = add_eql_sign(data_array[1]);
+            data = JSON.parse(Buffer.from(base64_data, 'base64').toString()) 
 
-            console.log(encoded_by_clientJWT)
+            //------------ if there is an exp date -------------//
+            if(data.exp){
+                jwt_unix_time_stamp = Date.now() / 1000 | 0 ;
+                if(jwt_unix_time_stamp > data.exp ){                   
 
-            if( data_array[2] == encoded_by_clientJWT ) {
-                base64_data = add_eql_sign(data_array[1]);
-                data = Buffer.from(base64_data, 'base64').toString();
-                return data
+                    encoded_by_clientJWT= crypto.createHmac('sha256', secret ).update(payload).digest("base64");
+                    encoded_by_clientJWT = remove_eqal_sign(encoded_by_clientJWT)
+    
+                    if( data_array[2] == encoded_by_clientJWT ) {                   
+                        return data
+                    }
+                    else{
+                        return false
+                    }
+                }
+                else{
+                    return false
+                }
             }
+            //------------ if there is no an exp date -------------//
             else{
-                return false
+                encoded_by_clientJWT= crypto.createHmac('sha256', secret ).update(payload).digest("base64");
+                encoded_by_clientJWT = remove_eqal_sign(encoded_by_clientJWT)
+    
+                if( data_array[2] == encoded_by_clientJWT ) {                   
+                    return data
+                }
+                else{
+                    return false
+                }
             }
+            
+
+            
         }
     },
 
